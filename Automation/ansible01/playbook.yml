@@ -1,0 +1,66 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Downloading neccesary packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg-agent
+          - software-properties-common
+        state: present
+        update_cache: yes
+
+    - name: Adding gpg key to Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Adding Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release | lower }} stable"
+        state: present
+
+    - name: Updating apt cache
+      apt:
+        update_cache: yes
+
+    - name: Installing docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: latest
+
+
+    - name: Ensure /home/vagrant/ansible01 exists
+      file:
+        path: /home/vagrant/ansible01
+        state: directory
+        mode: '0755'
+        owner: vagrant
+        group: vagrant
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Copying docker-compose.yml
+      copy:
+        src: ../docker-compose.yml
+        dest: /home/vagrant/ansible01/docker-compose.yml
+
+    - name: Synchronize microservice files
+      synchronize:
+        src: ../services
+        dest: /home/vagrant/ansible01/
+        recursive: yes
+
+    - name: Deployment of the microservice application
+      command: docker compose up -d
+      args:
+        chdir: /home/vagrant/ansible01

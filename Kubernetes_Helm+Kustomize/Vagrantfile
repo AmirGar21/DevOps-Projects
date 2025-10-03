@@ -1,0 +1,29 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/focal64"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+    vb.cpus = 4
+  end
+
+  config.vm.synced_folder "./shared", "/shared"
+
+  # Мастер
+  config.vm.define "master" do |master|
+    master.vm.hostname = "k3s-master"
+    master.vm.network "private_network", ip: "192.168.56.10"
+    master.vm.provision "shell", path: "install_k3s.sh", args: "master 192.168.56.10 192.168.56.10"
+    master.vm.network "forwarded_port", guest: 30087, host: 8087
+    master.vm.network "forwarded_port", guest: 30081, host: 8081
+  end
+
+  # Воркеры
+  ["worker1", "worker2"].each_with_index do |name, i|
+    worker_ip = "192.168.56.1#{1 + i}"
+    config.vm.define name do |worker|
+      worker.vm.hostname = "k3s-#{name}"
+      worker.vm.network "private_network", ip: worker_ip
+      worker.vm.provision "shell", path: "install_k3s.sh", args: "worker 192.168.56.10 #{worker_ip}"
+    end
+  end
+end

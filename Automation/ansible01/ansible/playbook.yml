@@ -1,0 +1,15 @@
+- name: application run
+  hosts: node01
+  roles:
+    - application
+
+- name: postgres run
+  hosts: node02
+  roles:
+    - postgres
+
+- name: apache run
+  hosts: node02
+  roles:
+    - apache
+

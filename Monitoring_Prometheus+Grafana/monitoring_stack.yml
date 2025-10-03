@@ -1,0 +1,129 @@
+configs:
+  prometheus-config:
+    file: ./prometheus.yml
+  alert-config:
+    file: ./alert-manager.yml
+services: 
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    configs:
+      - source: prometheus-config
+        target: /etc/prometheus/prometheus.yml
+    volumes:
+      - prometheus_data:/prometheus
+      - ./alert-rules.yml:/etc/prometheus/alert-rules.yml
+
+    networks: 
+      - overlay_net
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000" 
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager  
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin  
+      - GF_DATASOURCE_HTTP_TIMEOUT=500s        
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - overlay_net
+
+
+  loki:
+    image: grafana/loki:3.5.2
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    ports:
+      - "3100:3100"
+      - "9096:9096"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - overlay_net
+
+  
+  node_exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+    networks:
+      - overlay_net
+
+
+  blackbox_exporter:
+    image: prom/blackbox-exporter:latest
+    ports:
+      - "9115:9115"
+    networks:
+      - overlay_net
+
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8080:8080"
+    deploy:
+      mode: global
+    privileged: true
+    networks:
+      - overlay_net
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
+    volumes:
+      - alertmanager_data:/alertmanager
+    configs:
+      - source: alert-config
+        target: /etc/alertmanager/alertmanager.yml
+    networks:
+      - overlay_net
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - /vagrant/promtail-config.yml:/etc/promtail/config.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: global
+    networks:
+      - overlay_net
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+
+networks:
+  overlay_net:
+    driver: overlay 
+    attachable: true

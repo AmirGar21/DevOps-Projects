@@ -1,0 +1,19 @@
+  services:
+    myserver:
+        build: ../part5
+        networks:
+        - myserver-network
+
+    nginx: 
+      build: .
+      depends_on:
+        - myserver
+      ports: 
+        - "80:8080"
+      networks:
+        - myserver-network
+      volumes: 
+        -  ./nginx.conf:/etc/nginx/nginx.conf:ro
+  networks: 
+      myserver-network: 
+        driver: bridge

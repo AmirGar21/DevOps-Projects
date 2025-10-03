@@ -1,0 +1,103 @@
+   # tasks file for install_consul_client
+- name: Downloading dependencies
+  apt:
+    name:
+      - unzip
+      - curl
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Downloading consul file
+  get_url:
+        url: "https://releases.hashicorp.com/consul/1.14.0/consul_1.14.0_linux_amd64.zip"
+        dest: /tmp/consul.zip
+        mode: '0644'
+  become: yes
+
+- name: Unarchiving a consul zip file
+  unarchive:
+    src: /tmp/consul.zip
+    dest: /usr/local/bin/
+    remote_src: yes
+    mode: '0755'
+  become: yes
+
+- name: Checking that Consul is installed
+  command: consul --version
+  changed_when: false
+  become: yes
+
+- name: Creating a user for Consul
+  user:
+     name: consul
+     system: yes
+     shell: /bin/false
+  become: yes
+
+- name: Creating a directory for configurations
+  file:
+     path: /etc/consul.d
+     state: directory
+     owner: consul
+     group: consul
+     mode: '0755'
+  become: yes
+
+- name: copy consul_server.hcl
+  become: yes
+  copy:
+    src: consul_server.hcl
+    dest: /etc/consul.d/consul.hcl
+    owner: consul
+    group: consul
+    mode: '0644'
+
+- name: Create data directory for Consul
+  file:
+    path: /var/lib/consul
+    state: directory
+    owner: consul
+    group: consul
+    mode: '0755'
+  become: yes
+
+- name: Create systemd unit file for Consul
+  copy:
+    dest: /etc/systemd/system/consul.service
+    content: |
+      [Unit]
+      Description=Consul Agent
+      Requires=network-online.target
+      After=network-online.target
+
+      [Service]
+      User=consul
+      Group=consul
+      ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d
+      ExecReload=/bin/kill -HUP $MAINPID
+      KillMode=process
+      KillSignal=SIGTERM
+      Restart=on-failure
+      LimitNOFILE=65536
+
+      [Install]
+      WantedBy=multi-user.target
+  become: yes
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+  become: yes
+
+- name: Restart Consul
+  systemd:
+    name: consul
+    state: restarted
+  become: yes
+
+- name: Starting Consul
+  systemd:
+    name: consul
+    state: started
+    enabled: yes
+  become: yes

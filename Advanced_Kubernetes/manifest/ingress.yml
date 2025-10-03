@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapp-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  tls:
+    - hosts:
+        - mycluster.local
+      secretName: mycluster-cert-tls
+  rules:
+    - host: mycluster.local
+      http:
+        paths:
+          - path: /api/v1/auth/authorize
+            pathType: Prefix
+            backend:
+              service:
+                name: session-service
+                port:
+                  number: 8081
+          - path: /api/v1/gateway
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway-service
+                port:
+                  number: 8087

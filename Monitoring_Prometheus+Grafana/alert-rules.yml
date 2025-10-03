@@ -1,0 +1,30 @@
+groups:
+  - name: system_alerts
+    rules:
+      - alert: LowAvailableMemory
+        expr: node_memory_MemAvailable_bytes < 100 * 1024 * 1024
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Available memory is less than 100mb"
+          description: "Node has less than 100mb of available memory."
+
+      - alert: HighUsedMemory
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) > 1 * 1024 * 1024 * 1024
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Used ram is greater than 1gb"
+          description: "Node is consuming more than 1 GB RAM."
+
+
+      - alert: HighCPUUsage
+        expr: sum by (container_label_com_docker_swarm_service_name) ( rate(container_cpu_usage_seconds_total{container_label_com_docker_swarm_service_name=~"mystack_.*"}[1m])) * 100
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High CPU usage"
+          description: "Service is using more than 10% CPU."

@@ -1,0 +1,40 @@
+---
+# tasks file for install_db
+
+
+- name: install postgres
+  become: yes
+  apt:
+    name: postgresql
+    state: present
+    update_cache: yes
+
+- name: install python
+  become: yes
+  apt:
+    name: python3
+    state: present
+    update_cache: yes
+
+- name: install psycopg2
+  become: yes
+  apt:
+     name: python3-psycopg2
+     state: present
+     update_cache: yes
+
+- name: start postgres service
+  become: yes
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Create database
+  become: yes
+  postgresql_db:
+    name: "hotels_db"
+    state: present
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    login_host: 127.0.0.1

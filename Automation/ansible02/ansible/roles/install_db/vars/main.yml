@@ -1,0 +1,6 @@
+
+---
+# vars file for install_db
+
+db_user: postgres
+db_password: "123"

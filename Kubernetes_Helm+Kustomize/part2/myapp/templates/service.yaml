@@ -1,0 +1,25 @@
+{{- range $service, $config := .Values.services }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service }}
+  labels:
+    {{- include "myapp.labels" $ | nindent 4 }}
+spec:
+  type: {{ $config.service.type }}
+  ports:
+    - port: {{ $config.service.port }}
+      targetPort: {{ $config.service.targetPort }}
+      protocol: TCP
+      {{- if $config.service.name }}
+      name: {{ $config.service.name }}
+      {{- else }}
+      name: http
+      {{- end }}
+      {{- if $config.service.nodePort }}
+      nodePort: {{ $config.service.nodePort }}
+      {{- end }}
+  selector:
+    app: {{ $service }}
+---
+{{- end }}

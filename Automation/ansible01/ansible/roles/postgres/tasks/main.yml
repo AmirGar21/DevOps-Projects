@@ -1,0 +1,74 @@
+---
+# tasks file for roles/postgres
+
+- name: install postgres
+  become: yes
+  apt:
+    name: postgresql
+    state: present
+    update_cache: yes
+
+- name: install python
+  become: yes
+  apt:
+    name: python3
+    state: present
+    update_cache: yes
+
+- name: install psycopg2
+  become: yes
+  apt:
+     name: python3-psycopg2
+     state: present
+     update_cache: yes
+
+- name: start postgres service
+  become: yes
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: create a database
+  become: yes
+  postgresql_db:
+    name: "{{ db_name }}"
+    state: present
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    login_host: 127.0.0.1
+- name: Create table
+  become: yes
+  postgresql_query:
+    db: "{{ db_name }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    login_host: 127.0.0.1
+    query: |
+      CREATE TABLE IF NOT EXISTS testtable (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(50),
+      age INTEGER
+      );
+
+- name: Clear testtable before inserting new data
+  become: yes
+  postgresql_query:
+    db: "{{ db_name }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    login_host: 127.0.0.1
+    query: TRUNCATE TABLE testtable
+
+- name: Insert fixed records into testtable
+  become: yes
+  postgresql_query:
+    db: "{{ db_name }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    login_host: 127.0.0.1
+    query: |
+      INSERT INTO testtable (name, age) VALUES
+        ('John', 21),
+        ('Sarah', 20),
+        ('Ken', 19);

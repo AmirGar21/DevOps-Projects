@@ -1,0 +1,330 @@
+autoscaling:
+  enabled: false
+
+services:
+  postgres:
+    replicaCount: 1
+    image:
+      repository: corazono/postgres
+      tag: "1.0"
+    secretName: app-secrets
+    configName: app-config
+    env:
+      POSTGRES_USER:
+        secretKeyRef: POSTGRES_USER
+      POSTGRES_PASSWORD:
+        secretKeyRef: POSTGRES_PASSWORD
+      POSTGRES_DB:
+        configMapKeyRef:
+          key: POSTGRES_DB
+      POSTGRES_HOST:
+        configMapKeyRef:
+          key: POSTGRES_HOST
+      POSTGRES_PORT:
+        configMapKeyRef:
+          key: POSTGRES_PORT
+    service:
+      type: ClusterIP
+      port: 5432
+      targetPort: 5432
+    volumeMounts:
+      - name: postgres-storage
+        mountPath: /var/lib/postgresql/data
+    volumes:
+      - name: postgres-storage
+        emptyDir: {}
+
+  rabbitmq:
+    replicaCount: 1
+    image:
+      repository: rabbitmq
+      tag: "latest"
+    secretName: app-secrets
+    configName: app-config
+    env:
+      RABBIT_MQ_USER:
+        secretKeyRef: RABBIT_MQ_USER
+      RABBIT_MQ_PASSWORD:
+        secretKeyRef: RABBIT_MQ_PASSWORD
+      RABBIT_MQ_HOST:
+        configMapKeyRef:
+          key: RABBIT_MQ_HOST
+      RABBIT_MQ_PORT:
+        configMapKeyRef:
+          key: RABBIT_MQ_PORT
+      RABBIT_MQ_QUEUE_NAME:
+        configMapKeyRef:
+          key: RABBIT_MQ_QUEUE_NAME
+      RABBIT_MQ_EXCHANGE:
+        configMapKeyRef:
+          key: RABBIT_MQ_EXCHANGE
+    service:
+      type: ClusterIP
+      port: 5672
+      targetPort: 5672
+      name: amqp
+
+  booking-service:
+    replicaCount: 1
+    image:
+      repository: corazono/src-booking-service
+      tag: "1.0"
+    secretName: app-secrets
+    configName: app-config
+    env:
+      POSTGRES_USER:
+        secretKeyRef: POSTGRES_USER
+      POSTGRES_PASSWORD:
+        secretKeyRef: POSTGRES_PASSWORD
+      RABBIT_MQ_USER:
+        secretKeyRef: RABBIT_MQ_USER
+      RABBIT_MQ_PASSWORD:
+        secretKeyRef: RABBIT_MQ_PASSWORD
+      BOOKING_SERVICE_UUID:
+        secretKeyRef: BOOKING_SERVICE_UUID
+      GATEWAY_SERVICE_UUID:
+        secretKeyRef: GATEWAY_SERVICE_UUID
+      POSTGRES_HOST:
+        configMapKeyRef:
+          key: POSTGRES_HOST
+      POSTGRES_PORT:
+        configMapKeyRef:
+          key: POSTGRES_PORT
+      POSTGRES_DB:
+        configMapKeyRef:
+          key: POSTGRES_DB
+      RABBIT_MQ_HOST:
+        configMapKeyRef:
+          key: RABBIT_MQ_HOST
+      RABBIT_MQ_PORT:
+        configMapKeyRef:
+          key: RABBIT_MQ_PORT
+      RABBIT_MQ_QUEUE_NAME:
+        configMapKeyRef:
+          key: RABBIT_MQ_QUEUE_NAME
+      RABBIT_MQ_EXCHANGE:
+        configMapKeyRef:
+          key: RABBIT_MQ_EXCHANGE
+      HOTEL_SERVICE_HOST:
+        configMapKeyRef:
+          key: HOTEL_SERVICE_HOST
+      HOTEL_SERVICE_PORT:
+        configMapKeyRef:
+          key: HOTEL_SERVICE_PORT
+      PAYMENT_SERVICE_HOST:
+        configMapKeyRef:
+          key: PAYMENT_SERVICE_HOST
+      PAYMENT_SERVICE_PORT:
+        configMapKeyRef:
+          key: PAYMENT_SERVICE_PORT
+      LOYALTY_SERVICE_HOST:
+        configMapKeyRef:
+          key: LOYALTY_SERVICE_HOST
+      LOYALTY_SERVICE_PORT:
+        configMapKeyRef:
+          key: LOYALTY_SERVICE_PORT
+    service:
+      type: ClusterIP
+      port: 8083
+      targetPort: 8083
+
+  gateway-service:
+    replicaCount: 2
+    image:
+      repository: corazono/src-gateway-service
+      tag: "1.0"
+    secretName: app-secrets
+    configName: app-config
+    env:
+      SESSION_SERVICE_HOST:
+        configMapKeyRef:
+          key: SESSION_SERVICE_HOST
+      SESSION_SERVICE_PORT:
+        configMapKeyRef:
+          key: SESSION_SERVICE_PORT
+      HOTEL_SERVICE_HOST:
+        configMapKeyRef:
+          key: HOTEL_SERVICE_HOST
+      HOTEL_SERVICE_PORT:
+        configMapKeyRef:
+          key: HOTEL_SERVICE_PORT
+      BOOKING_SERVICE_HOST:
+        configMapKeyRef:
+          key: BOOKING_SERVICE_HOST
+      BOOKING_SERVICE_PORT:
+        configMapKeyRef:
+          key: BOOKING_SERVICE_PORT
+      PAYMENT_SERVICE_HOST:
+        configMapKeyRef:
+          key: PAYMENT_SERVICE_HOST
+      PAYMENT_SERVICE_PORT:
+        configMapKeyRef:
+          key: PAYMENT_SERVICE_PORT
+      LOYALTY_SERVICE_HOST:
+        configMapKeyRef:
+          key: LOYALTY_SERVICE_HOST
+      LOYALTY_SERVICE_PORT:
+        configMapKeyRef:
+          key: LOYALTY_SERVICE_PORT
+      REPORT_SERVICE_HOST:
+        configMapKeyRef:
+          key: REPORT_SERVICE_HOST
+      REPORT_SERVICE_PORT:
+        configMapKeyRef:
+          key: REPORT_SERVICE_PORT
+    service:
+      type: NodePort
+      port: 8087
+      targetPort: 8087
+      nodePort: 30087
+
+  hotel-service:
+    replicaCount: 1
+    image:
+      repository: corazono/src-hotel-service
+      tag: "1.0"
+    secretName: app-secrets
+    configName: app-config
+    env:
+      POSTGRES_USER:
+        secretKeyRef: POSTGRES_USER
+      POSTGRES_PASSWORD:
+        secretKeyRef: POSTGRES_PASSWORD
+      POSTGRES_DB:
+        configMapKeyRef:
+          key: POSTGRES_DB
+      POSTGRES_HOST:
+        configMapKeyRef:
+          key: POSTGRES_HOST
+      POSTGRES_PORT:
+        configMapKeyRef:
+          key: POSTGRES_PORT
+    service:
+      type: ClusterIP
+      port: 8082
+      targetPort: 8082
+
+  loyalty-service:
+    replicaCount: 1
+    image:
+      repository: corazono/src-loyalty-service
+      tag: "1.0"
+    secretName: app-secrets
+    configName: app-config
+    env:
+      POSTGRES_USER:
+        secretKeyRef: POSTGRES_USER
+      POSTGRES_PASSWORD:
+        secretKeyRef: POSTGRES_PASSWORD
+      POSTGRES_DB:
+        configMapKeyRef:
+          key: POSTGRES_DB
+      POSTGRES_HOST:
+        configMapKeyRef:
+          key: POSTGRES_HOST
+      POSTGRES_PORT:
+        configMapKeyRef:
+          key: POSTGRES_PORT
+    service:
+      type: ClusterIP
+      port: 8085
+      targetPort: 8085
+
+  payment-service:
+    replicaCount: 1
+    image:
+      repository: corazono/src-payment-service
+      tag: "1.0"
+    secretName: app-secrets
+    configName: app-config
+    env:
+      POSTGRES_USER:
+        secretKeyRef: POSTGRES_USER
+      POSTGRES_PASSWORD:
+        secretKeyRef: POSTGRES_PASSWORD
+      POSTGRES_DB:
+        configMapKeyRef:
+          key: POSTGRES_DB
+      POSTGRES_HOST:
+        configMapKeyRef:
+          key: POSTGRES_HOST
+      POSTGRES_PORT:
+        configMapKeyRef:
+          key: POSTGRES_PORT
+    service:
+      type: ClusterIP
+      port: 8084
+      targetPort: 8084
+
+  report-service:
+    replicaCount: 1
+    image:
+      repository: corazono/src-report-service
+      tag: "1.0"
+    secretName: app-secrets
+    configName: app-config
+    env:
+      POSTGRES_USER:
+        secretKeyRef: POSTGRES_USER
+      POSTGRES_PASSWORD:
+        secretKeyRef: POSTGRES_PASSWORD
+      POSTGRES_DB:
+        configMapKeyRef:
+          key: POSTGRES_DB
+      POSTGRES_HOST:
+        configMapKeyRef:
+          key: POSTGRES_HOST
+      POSTGRES_PORT:
+        configMapKeyRef:
+          key: POSTGRES_PORT
+      RABBIT_MQ_USER:
+        secretKeyRef: RABBIT_MQ_USER
+      RABBIT_MQ_PASSWORD:
+        secretKeyRef: RABBIT_MQ_PASSWORD
+      RABBIT_MQ_HOST:
+        configMapKeyRef:
+          key: RABBIT_MQ_HOST
+      RABBIT_MQ_PORT:
+        configMapKeyRef:
+          key: RABBIT_MQ_PORT
+      RABBIT_MQ_QUEUE_NAME:
+        configMapKeyRef:
+          key: RABBIT_MQ_QUEUE_NAME
+      RABBIT_MQ_EXCHANGE:
+        configMapKeyRef:
+          key: RABBIT_MQ_EXCHANGE
+    service:
+      type: ClusterIP
+      port: 8086
+      targetPort: 8086
+
+  session-service:
+    replicaCount: 1
+    image:
+      repository: corazono/src-session-service
+      tag: "1.0"
+    secretName: app-secrets
+    configName: app-config
+    env:
+      POSTGRES_USER:
+        secretKeyRef: POSTGRES_USER
+      POSTGRES_PASSWORD:
+        secretKeyRef: POSTGRES_PASSWORD
+      POSTGRES_DB:
+        configMapKeyRef:
+          key: POSTGRES_DB
+      POSTGRES_HOST:
+        configMapKeyRef:
+          key: POSTGRES_HOST
+      POSTGRES_PORT:
+        configMapKeyRef:
+          key: POSTGRES_PORT
+    service:
+      type: NodePort
+      port: 8081
+      targetPort: 8081
+      nodePort: 30081
+
+
+
+

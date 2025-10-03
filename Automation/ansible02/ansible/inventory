@@ -1,0 +1,13 @@
+[consul_server]
+192.168.56.11
+
+[api]
+192.168.56.12
+
+[db]
+192.168.56.13
+
+[all:vars]
+ansible_ssh_user=vagrant
+ansible_ssh_private_key_file=/home/vagrant/.ssh/id_rsa
+

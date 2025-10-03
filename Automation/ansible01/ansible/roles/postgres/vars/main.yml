@@ -1,0 +1,6 @@
+---
+# vars file for roles/postgres
+
+db_name: d08
+db_user: postgres
+db_password: "123"
